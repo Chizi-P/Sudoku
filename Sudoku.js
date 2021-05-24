@@ -4,9 +4,14 @@ class Sudoku {
         this.column = column;
         this.length = row * column;
         this.matrix = this.createMatrix(this.length, this.length);
+        this.characters = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        this.ans = this.createMatrix(this.length, this.length, copy(this.characters));
     }
-    createMatrix(row, column) {
-        return new Array(row).fill(null).map(() => new Array(column).fill(0));
+    copy(obj) {
+        return JSON.parse(JSON.stringify(obj));
+    }
+    createMatrix(row, column, init = 0) {
+        return new Array(row).fill(null).map(() => new Array(column).fill(init));
     }
     createBylist(list) {
         if (list.length != this.length ** 2) {
@@ -14,6 +19,17 @@ class Sudoku {
         }
         this.matrix = this.matrix.map((r, i) => r.map((_, j) => list[i * this.length + j]));
         return this;
+    }
+    someRow() {
+        this.matrix.forEach((r, i) => {
+            // let set = new Set(this.characters);
+            r.forEach(e => {
+                set.delete(e);
+            });
+            this.ans = this.ans[i].map(e => {
+                e.push(...set)
+            });
+        });
     }
     solution() {
         
