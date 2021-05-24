@@ -4,7 +4,7 @@ class Sudoku {
         this.column = column;
         this.length = row * column;
         this.matrix = this.createMatrix(this.length, this.length);
-        this.characters = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        this.characters = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]);
         this.ans = this.createMatrix(this.length, this.length, copy(this.characters));
     }
     copy(obj) {
@@ -22,14 +22,19 @@ class Sudoku {
     }
     someRow() {
         this.matrix.forEach((r, i) => {
-            // let set = new Set(this.characters);
             r.forEach(e => {
-                set.delete(e);
-            });
-            this.ans = this.ans[i].map(e => {
-                e.push(...set)
+                this.ans[i] = this.ans[i].map(p => {
+                    p.delete(e);
+                });
             });
         });
+    }
+    someColumn() {
+        for (let i = 0; i < this.length; i++) {
+            for (let j = 0; j < this.length; j++) {
+                this.matrix
+            }
+        }
     }
     solution() {
         
