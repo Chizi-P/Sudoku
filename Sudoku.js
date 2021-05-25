@@ -44,7 +44,6 @@ class Sudoku {
     checkBlock() {
         for (let i = 0; i < this.row; i += this.row) {
             for (let j = 0; j < this.column; j += this.column) {
-                let set = new Set(...this.characters);
                 for (let k = 0; k < this.row; k++) {
                     for (let l = 0; l < this.column; l++) {
                         let e = this.matrix[i + k][j + l];
@@ -59,6 +58,18 @@ class Sudoku {
         }
         return this;
     }
+    checkOnly() {
+        let only = [];
+        this.ans.forEach((r, i) => r.forEach((e, j) => {
+            if (e.size == 1) {
+                only.push({ val : String(...e.values()), i, j });
+            }
+        }));
+        only.forEach(e => {
+            this.matrix[e.i][e.j] = e.val;
+        });
+        return only;
+    }
     solution() {
         return this.checkRow().checkColumn();
     }
@@ -66,17 +77,20 @@ class Sudoku {
 }
 
 var list = ["5","3",".",".","7",".",".",".",".",
- "6",".",".","1","9","5",".",".",".",
- ".","9","8",".",".",".",".","6",".",
- "8",".",".",".","6",".",".",".","3",
- "4",".",".","8",".","3",".",".","1",
- "7",".",".",".","2",".",".",".","6",
- ".","6",".",".",".",".","2","8",".",
- ".",".",".","4","1","9",".",".","5",
- ".",".",".",".","8",".",".","7","9"]
+            "6",".",".","1","9","5",".",".",".",
+            ".","9","8",".",".",".",".","6",".",
+            "8",".",".",".","6",".",".",".","3",
+            "4",".",".","8",".","3",".",".","1",
+            "7",".",".",".","2",".",".",".","6",
+            ".","6",".",".",".",".","2","8",".",
+            ".",".",".","4","1","9",".",".","5",
+            ".",".",".",".","8",".",".","7","9"];
 var s = new Sudoku();
 s.createBylist(list);
 console.table(s.matrix);
 s.solution();
 console.table(s.ans);
+s.checkBlock();
 console.table(s.ans);
+s.checkOnly();
+console.table(s.matrix);
