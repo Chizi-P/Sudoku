@@ -4,7 +4,7 @@ class Sudoku {
         this.column = column;
         this.length = row * column;
         this.matrix = this.createMatrix(this.length, this.length);
-        this.characters = new Set(['1', '2', '3', '4', '5', '6', '7', '8', '9']);
+        this.characters = new Set(['.', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
         this.ans = this.createMatrix(this.length, this.length).map(r => r.map(_ => new Set(['1', '2', '3', '4', '5', '6', '7', '8', '9'])));
     }
     copy(obj) {
@@ -69,6 +69,20 @@ class Sudoku {
             this.matrix[e.i][e.j] = e.val;
         });
         return only;
+    }
+    set(i, j) {
+        let column = [];
+        for (let k = 0; k < this.length; k++) {
+            column.push(this.matrix[k][j]);
+        }
+        let block = [];
+        for (let rowStart = (i - i % this.row), l = rowStart; l < rowStart + this.row; l++) {
+            for (let columnStart = (j - j % this.column), m = columnStart; m < columnStart + this.column; m++) {
+                block.push(this.matrix[l][m]);
+            }
+        }
+        return new Set([...this.matrix[i], ...column, ...block]);
+        
     }
     solution() {
         return this.checkRow().checkColumn();
