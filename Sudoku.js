@@ -4,12 +4,16 @@ class Sudoku {
         this.column = column;
         this.length = row * column;
         this.matrix = this.createMatrix(this.length, this.length);
-        this.unknow = '.';
+        this.unknowChar = '.';
         this.characters = new Set(['1', '2', '3', '4', '5', '6', '7', '8', '9']);
+        this.chars = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
         this.ans = this.createMatrix(this.length, this.length).map(r => r.map(_ => new Set(['1', '2', '3', '4', '5', '6', '7', '8', '9'])));
     }
     copy(obj) {
         return JSON.parse(JSON.stringify(obj));
+    }
+    copy2(array) {
+        return array.map(arr => arr.slice());
     }
     createMatrix(row, column, init = 0) {
         return new Array(row).fill(null).map(() => new Array(column).fill(init));
@@ -72,14 +76,14 @@ class Sudoku {
         return only;
     }
     set(i, j) {
-        let column = [];
+        let column = new Set();
         for (let k = 0; k < this.length; k++) {
-            column.push(this.matrix[k][j]);
+            column.add(this.matrix[k][j]);
         }
-        let block = [];
+        let block = new Set();
         for (let rowStart = (i - i % this.row), l = rowStart; l < rowStart + this.row; l++) {
             for (let columnStart = (j - j % this.column), m = columnStart; m < columnStart + this.column; m++) {
-                block.push(this.matrix[l][m]);
+                block.add(this.matrix[l][m]);
             }
         }
         return new Set([...this.matrix[i], ...column, ...block]);
@@ -91,19 +95,38 @@ class Sudoku {
     //     }
     //     return subtracting;
     // }
-    solution(board) {
-        board.forEach((r, i) => {
-            let j = r.indexOf(this.unknow);
-            if (i == this.length - 1 && j == -1) {
+    solution(board, i = 0) {
+        let j = 0;
+        for (let l = i; l < this.length; l++) {
+            j = board[l].indexOf(this.unknowChar);
+            if (j) {
+                i = l;
+                break;
+            } else {
                 return board;
             }
-            let set = this.set(i, j);
-            this.characters.filter(c => !set.has(c)).forEach(e => {
-                newBoard = this.copy(board);
-                newBoard[i][j] = e;
-                return this.solution(newBoard);
-            });
-        });
+        }
+        let set = this.set(i, j);
+        let p = this.chars.filter(c => !set.has(c));
+        if (!p.length) return 0;
+        for (const e of p) {
+            let newBoard = this.copy2(board);
+            newBoard[i][j] = e;
+            return this.solution(newBoard, i);
+        }
+
+        // board.forEach((r, i) => {
+        //     let j = r.indexOf(this.unknow);
+        //     if (i == this.length - 1 && j == -1) {
+        //         return board;
+        //     }
+        //     let set = this.set(i, j);
+        //     this.chars.filter(c => !set.has(c)).forEach(e => {
+        //         let newBoard = this.copy(board);
+        //         newBoard[i][j] = e;
+        //         return this.solution(newBoard);
+        //     });
+        // });
     }
     show() {}
 }
@@ -117,12 +140,23 @@ var list = ["5","3",".",".","7",".",".",".",".",
             ".","6",".",".",".",".","2","8",".",
             ".",".",".","4","1","9",".",".","5",
             ".",".",".",".","8",".",".","7","9"];
+
+var list2 = ['5', '3', '4', '6', '7', '8', '9', '1', '2',
+             '6', '7', '2', '1', '9', '5', '.', '4', '8',
+             '1', '9', '8', '3', '4', '.', '5', '6', '7',
+             '8', '5', '9', '7', '6', '.', '4', '2', '3',
+             '4', '2', '6', '8', '5', '3', '7', '9', '1',
+             '7', '1', '3', '9', '2', '.', '8', '5', '6',
+             '9', '6', '1', '.', '3', '7', '2', '8', '4',
+             '2', '8', '7', '4', '1', '9', '6', '3', '5',
+             '3', '4', '5', '2', '8', '6', '1', '7', '9'];
 var s = new Sudoku();
-s.createBylist(list);
+s.createBylist(list2);
 console.table(s.matrix);
-s.solution();
-console.table(s.ans);
-s.checkBlock();
-console.table(s.ans);
-s.checkOnly();
-console.table(s.matrix);
+// s.solution(s.matrix);
+console.table(s.solution(s.matrix));
+// console.table(s.ans);
+// s.checkBlock();
+// console.table(s.ans);
+// s.checkOnly();
+// console.table(s.matrix);
