@@ -1,19 +1,19 @@
 class Sudoku {
-    constructor(row = 3, column = 3) {
-        this.row = row
-        this.column = column;
-        this.length = row * column;
-        this.unknowChar = '.';
-        this.chars = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    constructor({size = 3, chars = ['1', '2', '3', '4', '5', '6', '7', '8', '9'], unknowChar = '.'} = {}) {
+        this.size;
+        this.length = size ** 2;
+        this.chars = chars
+        this.unknowChar = unknowChar;
         this.done = false;
         this.multipleSolutions = false;
+        this._ans = [];
     }
     set(i, board) {
         const set = board.filter((_, j) => {
             return parseInt(i / this.length) == parseInt(j / this.length) 
             || (i - j) % this.length == 0
-            || parseInt(i / this.length * this.column) == parseInt(j / this.length * this.row)
-            && parseInt(i % this.length / this.column) == parseInt(j % this.length / this.row);
+            || parseInt(i / this.length * this.size) == parseInt(j / this.length * this.size)
+            && parseInt(i % this.length / this.size) == parseInt(j % this.length / this.size);
         });
         return new Set(set);
     }
@@ -36,17 +36,26 @@ class Sudoku {
     }
     ans(qu, multipleSolutions = false) {
         this.multipleSolutions = multipleSolutions;
-        const ans = this.solution(qu).flat(multipleSolutions ? 0 : 1);
+        this._ans = this.solution(qu).flat(multipleSolutions ? 0 : 1);
         this.done = false;
-        return ans;
+        return this._ans;
+    }
+    static resize(list, l) {
+        let result = [];
+        for (let i = 0; i < list.length; i++) {
+            result.push(list.splice(0, l));
+        }
+        return result;
     }
     show() {
-        function resize(list, l) {
-            let result = [];
-            for (let i = 0; i < list.length; i++) {
-                result.push(list.splice(0, l));
+        if (this.multipleSolutions) {
+            for (let i = 0; i < this._ans.length; i++) {
+                console.log('Answer', i, ':');
+                console.table(Sudoku.resize(this._ans, this.length));
             }
-            return result;
+        } else {
+            console.log('Answer:');
+            console.table(Sudoku.resize(this._ans, this.length));
         }
     }
 }
@@ -62,6 +71,7 @@ var list = ["5","3","4",".","7",".",".",".",".",
             ".",".",".",".","8",".",".","7","9"];
 
 var s = new Sudoku();
-let result = s.ans(list);
+let result = s.ans(list, true);
 // console.table(resize(result[0], 9));
 console.log(result);
+s.show();
