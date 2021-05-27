@@ -51,7 +51,7 @@ class Sudoku {
         if (this.multipleSolutions) {
             for (let i = 0; i < this._ans.length; i++) {
                 console.log('Answer', i, ':');
-                console.table(Sudoku.resize(this._ans, this.length));
+                console.table(Sudoku.resize(this._ans[i], this.length));
             }
         } else {
             console.log('Answer:');
@@ -61,7 +61,7 @@ class Sudoku {
 }
 
 var list = ["5","3","4",".","7",".",".",".",".",
-            "6",".",".","1","9","5",".",".",".",
+            "6",".",".","1","9","5",".",".","8",
             ".","9","8",".",".",".",".","6",".",
             "8",".",".",".","6",".",".",".","3",
             "4",".",".","8",".","3",".",".","1",
@@ -71,7 +71,7 @@ var list = ["5","3","4",".","7",".",".",".",".",
             ".",".",".",".","8",".",".","7","9"];
 
 var s = new Sudoku();
-let result = s.ans(list, true);
+let result = s.ans(list);
 // console.table(resize(result[0], 9));
 console.log(result);
 s.show();
