@@ -3,168 +3,40 @@ class Sudoku {
         this.row = row
         this.column = column;
         this.length = row * column;
-        this.matrix = this.createMatrix(this.length, this.length);
         this.unknowChar = '.';
-        this.characters = new Set(['1', '2', '3', '4', '5', '6', '7', '8', '9']);
         this.chars = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
-        this.ans = this.createMatrix(this.length, this.length).map(r => r.map(_ => new Set(['1', '2', '3', '4', '5', '6', '7', '8', '9'])));
+        this.qu;
+        this.ans = [];
     }
-    copy(obj) {
-        return JSON.parse(JSON.stringify(obj));
+    list(qu) {
+        this.qu = qu;
     }
-    copy2(array) {
-        return array.map(arr => arr.slice());
-    }
-    createMatrix(row, column, init = 0) {
-        return new Array(row).fill(null).map(() => new Array(column).fill(init));
-    }
-    createBylist(list) {
-        if (list.length != this.length ** 2) {
-            throw "";
-        }
-        this.matrix = this.matrix.map((r, i) => r.map((_, j) => list[i * this.length + j]));
-        return this;
-    }
-    list(listData) {
-        this.listData = listData;
-    }
-    checkRow() {
-        this.matrix.forEach((r, i) => {
-            r.forEach(e => {
-                for (let k = 0; k < this.length; k++) {
-                    this.ans[i][k].delete(e)
-                }
-            });
-        });
-        return this;
-    }
-    checkColumn() {
-        for (let i = 0; i < this.length; i++) {
-            for (let j = 0; j < this.length; j++) {
-                let e = this.matrix[j][i]
-                for (let k = 0; k < this.length; k++) {
-                    this.ans[k][i].delete(e);
-                }
-            }
-        }
-        return this;
-    }
-    checkBlock() {
-        for (let i = 0; i < this.row; i += this.row) {
-            for (let j = 0; j < this.column; j += this.column) {
-                for (let k = 0; k < this.row; k++) {
-                    for (let l = 0; l < this.column; l++) {
-                        let e = this.matrix[i + k][j + l];
-                        for (let m = 0; m < this.row; m++) {
-                            for (let n = 0; n < this.column; n++) {
-                                this.ans[i + m][j + n].delete(e);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return this;
-    }
-    checkOnly() {
-        let only = [];
-        this.ans.forEach((r, i) => r.forEach((e, j) => {
-            if (e.size == 1) {
-                only.push({ val : String(...e.values()), i, j });
-            }
-        }));
-        only.forEach(e => {
-            this.matrix[e.i][e.j] = e.val;
-        });
-        return only;
-    }
-    set(i, j) {
-        let column = new Set();
-        for (let k = 0; k < this.length; k++) {
-            column.add(this.matrix[k][j]);
-        }
-        let block = new Set();
-        for (let rowStart = (i - i % this.row), l = rowStart; l < rowStart + this.row; l++) {
-            for (let columnStart = (j - j % this.column), m = columnStart; m < columnStart + this.column; m++) {
-                block.add(this.matrix[l][m]);
-            }
-        }
-        return new Set([...this.matrix[i], ...column, ...block]);
-    }
-    // subtracting(set) {
-    //     let subtracting = new Set(this.characters);
-    //     for (const e of set) {
-    //         subtracting.delete(e);
-    //     }
-    //     return subtracting;
-    // }
-    solution(board, i = 0) {
-        let j = 0;
-        for (let l = i; l < this.length; l++) {
-            j = board[l].indexOf(this.unknowChar);
-            if (j) {
-                i = l;
-                break;
-            } else {
-                return board;
-            }
-        }
-        let set = this.set(i, j);
-        let p = this.chars.filter(c => !set.has(c));
-        if (!p.length) return 0;
-        for (const e of p) {
-            let newBoard = this.copy2(board);
-            newBoard[i][j] = e;
-            return this.solution(newBoard, i);
-        }
-
-        // board.forEach((r, i) => {
-        //     let j = r.indexOf(this.unknow);
-        //     if (i == this.length - 1 && j == -1) {
-        //         return board;
-        //     }
-        //     let set = this.set(i, j);
-        //     this.chars.filter(c => !set.has(c)).forEach(e => {
-        //         let newBoard = this.copy(board);
-        //         newBoard[i][j] = e;
-        //         return this.solution(newBoard);
-        //     });
-        // });
-    }
-    set2(i) {
-        const set = this.listData.filter((_, j) => {
-            parseInt(i / this.length) == parseInt(j / this.length) 
+    set(i, board) {
+        const set = board.filter((_, j) => {
+            return parseInt(i / this.length) == parseInt(j / this.length) 
             || (i - j) % this.length == 0
-            || parseInt(i % this.length / this.column) == parseInt(j % this.length / this.row);
+            || parseInt(i / this.length * this.column) == parseInt(j / this.length * this.row)
+            && parseInt(i % this.length / this.column) == parseInt(j % this.length / this.row);
         });
         return new Set(set);
     }
-    solution2() {
+    solution(board) {
         let ans = [];
-        let i = this.listData.indexOf(this.unknowChar);
-        if (!i) {
-            return this.listData;
+        let i = board.indexOf(this.unknowChar);
+        if (i == -1) {
+            return [board];
         }
-        
-        let set = this.set2(i);
-        this.chars.filter(e => !set.has(e)).forEach(e => {
-            ans.push(this.solution2(this.listData.slice(0, i).concat(e).concat(this.listData.slice(i + 1))));
-        });
+        let set = this.set(i, board);
+        let f = this.chars.filter(e => !set.has(e));
+        for (const e of f) {
+            ans.push(...this.solution(board.slice(0, i).concat(e).concat(board.slice(i + 1))));
+        }
         return ans;
-
-
-/*
-    exclude = {board[j] for j in range(81) if same_row(idx,j) or same_col(idx,j) or same_block(idx,j)}
-    for m in set('123456789')-exclude:
-    ans += solveSudoku(board[:idx]+[m]+board[idx+1:])
-    return ans
-*/
-        
     }
     show() {}
 }
 
-var list = ["5","3",".",".","7",".",".",".",".",
+var list = ["5","3","4",".","7",".",".",".",".",
             "6",".",".","1","9","5",".",".",".",
             ".","9","8",".",".",".",".","6",".",
             "8",".",".",".","6",".",".",".","3",
@@ -174,22 +46,26 @@ var list = ["5","3",".",".","7",".",".",".",".",
             ".",".",".","4","1","9",".",".","5",
             ".",".",".",".","8",".",".","7","9"];
 
-var list2 = ['5', '3', '4', '6', '7', '8', '9', '1', '2',
-             '6', '7', '2', '1', '9', '5', '.', '4', '8',
-             '1', '9', '8', '3', '4', '.', '5', '6', '7',
-             '8', '5', '9', '7', '6', '.', '4', '2', '3',
-             '4', '2', '6', '8', '5', '3', '7', '9', '1',
-             '7', '1', '3', '9', '2', '.', '8', '5', '6',
-             '9', '6', '1', '.', '3', '7', '2', '8', '4',
-             '2', '8', '7', '4', '1', '9', '6', '3', '5',
-             '3', '4', '5', '2', '8', '6', '1', '7', '9'];
+var list2 = ['5', '3', '.', '.', '7', '.', '.', '.', '.',
+             '6', '.', '.', '1', '9', '5', '.', '4', '.',
+             '.', '.', '8', '.', '.', '.', '5', '.', '7',
+             '8', '.', '.', '.', '6', '.', '4', '2', '3',
+             '4', '.', '.', '8', '5', '3', '7', '9', '1',
+             '7', '1', '.', '.', '2', '.', '.', '.', '6',
+             '.', '6', '.', '.', '.', '7', '2', '8', '.',
+             '.', '.', '.', '4', '1', '9', '.', '.', '5',
+             '.', '.', '.', '2', '8', '.', '.', '7', '9'];
 var s = new Sudoku();
-s.createBylist(list2);
-console.table(s.matrix);
-// s.solution(s.matrix);
-console.table(s.solution(s.matrix));
-// console.table(s.ans);
-// s.checkBlock();
-// console.table(s.ans);
-// s.checkOnly();
-// console.table(s.matrix);
+s.list(list2);
+let row = [];
+console.table(resize(s.solution(list2)[0], 9));
+
+function resize(list, l) {
+    let result = [];
+    for (let i = 0; i < list.length; i+=l) {
+        result.push(list.splice(i, l));
+    }
+    return result;
+}
+
+// console.log(s.ans);
