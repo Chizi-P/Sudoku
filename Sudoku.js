@@ -25,6 +25,9 @@ class Sudoku {
         this.matrix = this.matrix.map((r, i) => r.map((_, j) => list[i * this.length + j]));
         return this;
     }
+    list(listData) {
+        this.listData = listData;
+    }
     checkRow() {
         this.matrix.forEach((r, i) => {
             r.forEach(e => {
@@ -127,6 +130,36 @@ class Sudoku {
         //         return this.solution(newBoard);
         //     });
         // });
+    }
+    set2(i) {
+        const set = this.listData.filter((_, j) => {
+            parseInt(i / this.length) == parseInt(j / this.length) 
+            || (i - j) % this.length == 0
+            || parseInt(i % this.length / this.column) == parseInt(j % this.length / this.row);
+        });
+        return new Set(set);
+    }
+    solution2() {
+        let ans = [];
+        let i = this.listData.indexOf(this.unknowChar);
+        if (!i) {
+            return this.listData;
+        }
+        
+        let set = this.set2(i);
+        this.chars.filter(e => !set.has(e)).forEach(e => {
+            ans.push(this.solution2(this.listData.slice(0, i).concat(e).concat(this.listData.slice(i + 1))));
+        });
+        return ans;
+
+
+/*
+    exclude = {board[j] for j in range(81) if same_row(idx,j) or same_col(idx,j) or same_block(idx,j)}
+    for m in set('123456789')-exclude:
+    ans += solveSudoku(board[:idx]+[m]+board[idx+1:])
+    return ans
+*/
+        
     }
     show() {}
 }
