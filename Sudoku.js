@@ -1,4 +1,4 @@
-const { DescriptorMatch } = require('opencv4nodejs');
+const { COLOR_RGB2BGRA } = require('opencv4nodejs');
 const cv = require('opencv4nodejs');
 
 class Sudoku {
@@ -43,8 +43,18 @@ class Sudoku {
         this.done = false;
         return this._ans;
     }
-    ansFromImg(image) {
+    ansFromImg(imagePath) {
+        let image = cv.imread(imagePath, cv.IMREAD_GRAYSCALE);
+        let img_gray = image.cvtColor(cv.COLOR_BGR2GRAY);
+        let img_Blur = img_gray.medianBlur(3);
+        img_Blur = img_Blur.gaussianBlur(new cv.Size(3, 3), 0);
 
+        let kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(11, 11));
+        let close = kernel.morphologyEx(img_Blur, cv.MORPH_CLOSE);
+        // div = np.float32(img_Blur) / close;
+        // img_brightness_adjust = np.uint8(cv2.normalize(div, div, 0, 255, cv2.NORM_MINMAX));
+        
+        cv.imwrite('result.png', img_gray);
     }
     static resize(list, l) {
         let result = [];
@@ -80,3 +90,6 @@ var list = ["5","3","4",".","7",".",".",".",".",
 // let result = s.ans(list);
 // console.log(result);
 // s.show();
+
+let s = new Sudoku();
+s.ansFromImg('image.png');
