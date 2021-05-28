@@ -1,3 +1,6 @@
+const { DescriptorMatch } = require('opencv4nodejs');
+const cv = require('opencv4nodejs');
+
 class Sudoku {
     constructor({size = 3, chars = ['1', '2', '3', '4', '5', '6', '7', '8', '9'], unknowChar = '.'} = {}) {
         this.size;
@@ -18,17 +21,17 @@ class Sudoku {
         return new Set(set);
     }
     solution(board) {
-        let ans = [];
         if (this.done && !this.multipleSolutions) {
             return [];
         }
-        let i = board.indexOf(this.unknowChar);
+        let ans = [];
+        const i = board.indexOf(this.unknowChar);
         if (i == -1) {
-            this.done = true
+            this.done = true;
             return [board];
         }
-        let set = this.set(i, board);
-        let f = this.chars.filter(e => !set.has(e));
+        const set = this.set(i, board);
+        const f = this.chars.filter(e => !set.has(e));
         for (const e of f) {
             ans.push(...this.solution(board.slice(0, i).concat(e).concat(board.slice(i + 1))));
         }
@@ -39,6 +42,9 @@ class Sudoku {
         this._ans = this.solution(qu).flat(multipleSolutions ? 0 : 1);
         this.done = false;
         return this._ans;
+    }
+    ansFromImg(image) {
+
     }
     static resize(list, l) {
         let result = [];
@@ -70,8 +76,7 @@ var list = ["5","3","4",".","7",".",".",".",".",
             ".",".",".","4","1","9",".",".","5",
             ".",".",".",".","8",".",".","7","9"];
 
-var s = new Sudoku();
-let result = s.ans(list);
-// console.table(resize(result[0], 9));
-console.log(result);
-s.show();
+// let s = new Sudoku();
+// let result = s.ans(list);
+// console.log(result);
+// s.show();
