@@ -1,4 +1,5 @@
 const cv = require('opencv4nodejs');
+const Tesseract = require('tesseract.js')
 
 class Sudoku {
     constructor({size = 3, chars = ['1', '2', '3', '4', '5', '6', '7', '8', '9'], unknowChar = '.'} = {}) {
@@ -85,7 +86,36 @@ class Sudoku {
         const m = cv.getPerspectiveTransform(docCnt, dst);
         result = result.warpPerspective(m, new cv.Size(size, size));
 
+        const bigGrid = size / this.size;
+        const smallGrid = size / this.length;
+
+        // result.drawCircle(new cv.Point2(0, smallGrid * 8), 3, new cv.Vec3(0, 0, 255))
+
         cv.imwrite('3.png', result);
+
+        const edgeSize = smallGrid / 3;
+        const deteSmallGridSize = edgeSize * 2;
+        (async () => {
+            const worker = Tesseract.createWorker();
+            await worker.load();
+            await worker.loadLanguage('eng');
+            await worker.initialize('eng');
+            await worker.setParameters({
+                tessedit_char_whitelist: '0123456789',
+            });
+            let list = [];
+            for (let i = 0; i < this.length; i++) {
+                for (let j = 0; j < this.length; j++) {
+                    const { data: { text } } = await worker.recognize('3.png', {
+                        rectangle: { top: edgeSize + deteSmallGridSize * i, left: edgeSize + deteSmallGridSize * j, width: deteSmallGridSize, height: deteSmallGridSize },
+                    });
+                    list.push(text == '' ? '.' : text);
+                }
+            }
+            console.log(list);
+            await worker.terminate();
+        })();
+
     }
     static resize(list, l) {
         let result = [];
