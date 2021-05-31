@@ -1,4 +1,3 @@
-const { Size, KMEANS_PP_CENTERS, Point2, Vec3, Contour, Point, imwrite } = require('opencv4nodejs');
 const cv = require('opencv4nodejs');
 
 class Sudoku {
@@ -47,8 +46,8 @@ class Sudoku {
         let result = cv.imread(imagePath);
         let image = cv.imread(imagePath);
         image = image.cvtColor(cv.COLOR_BGR2GRAY);
-        image = image.gaussianBlur(new Size(5, 5), 0)
-        image = image.dilate(cv.getStructuringElement(cv.MORPH_RECT, new Size(3, 3)));
+        image = image.gaussianBlur(new cv.Size(5, 5), 0)
+        image = image.dilate(cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3, 3)));
         image = image.canny(30, 120, 3);
 
         cv.imwrite('1.png', image);
@@ -66,25 +65,27 @@ class Sudoku {
                 }
             }
         }
-        for (let peak of docCnt) {
-            result.drawCircle(peak, 10, new Vec3(0, 0, 255));
-        }
 
-        cv.imwrite('2.png', result);
+        // for (let peak of docCnt) {
+        //     result.drawCircle(peak, 5, new Vec3(0, 0, 255));
+        // }
+        // result.drawLine(docCnt[0], docCnt[1], new Vec3(0, 255, 0));
+        // result.drawLine(docCnt[1], docCnt[2], new Vec3(0, 255, 0));
+        // result.drawLine(docCnt[2], docCnt[3], new Vec3(0, 255, 0));
+        // result.drawLine(docCnt[3], docCnt[0], new Vec3(0, 255, 0));
+        // cv.imwrite('2.png', result);
 
-
-        // src = np.float32([[207, 151], [517, 285], [17, 601], [343, 731]])
-        // dst = np.float32([[0, 0], [337, 0], [0, 488], [337, 488]])
+        const size = 300;
         const dst = [
-            new Point2(0, 0), 
-            new Point2(300, 0), 
-            new Point2(0, 300), 
-            new Point2(300, 300)
+            new cv.Point2(size, 0), 
+            new cv.Point2(0, 0), 
+            new cv.Point2(0, size), 
+            new cv.Point2(size, size)
         ];
         const m = cv.getPerspectiveTransform(docCnt, dst);
-        result = result.warpPerspective(m, new Size(300, 300));
+        result = result.warpPerspective(m, new cv.Size(size, size));
 
-        imwrite('result.png', result);
+        cv.imwrite('3.png', result);
     }
     static resize(list, l) {
         let result = [];
