@@ -1,4 +1,4 @@
-const { COLOR_RGB2BGRA } = require('opencv4nodejs');
+const { Size, KMEANS_PP_CENTERS, Point2, Vec3, Contour, Point, imwrite } = require('opencv4nodejs');
 const cv = require('opencv4nodejs');
 
 class Sudoku {
@@ -44,17 +44,47 @@ class Sudoku {
         return this._ans;
     }
     ansFromImg(imagePath) {
-        let image = cv.imread(imagePath, cv.IMREAD_GRAYSCALE);
-        let img_gray = image.cvtColor(cv.COLOR_BGR2GRAY);
-        let img_Blur = img_gray.medianBlur(3);
-        img_Blur = img_Blur.gaussianBlur(new cv.Size(3, 3), 0);
+        let result = cv.imread(imagePath);
+        let image = cv.imread(imagePath);
+        image = image.cvtColor(cv.COLOR_BGR2GRAY);
+        image = image.gaussianBlur(new Size(5, 5), 0)
+        image = image.dilate(cv.getStructuringElement(cv.MORPH_RECT, new Size(3, 3)));
+        image = image.canny(30, 120, 3);
 
-        let kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(11, 11));
-        let close = kernel.morphologyEx(img_Blur, cv.MORPH_CLOSE);
-        // div = np.float32(img_Blur) / close;
-        // img_brightness_adjust = np.uint8(cv2.normalize(div, div, 0, 255, cv2.NORM_MINMAX));
-        
-        cv.imwrite('result.png', img_gray);
+        cv.imwrite('1.png', image);
+
+        let cnts = image.findContours(cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+        let docCnt;
+        if (cnts.length > 0) {
+            cnts = cnts.sort((a, b) => b.area - a.area);
+            for (const c of cnts) {
+                let peri = c.arcLength(true);
+                let approx = c.approxPolyDP(0.02 * peri, true);
+                if (approx.length == 4) {
+                    docCnt = approx;
+                    break;
+                }
+            }
+        }
+        for (let peak of docCnt) {
+            result.drawCircle(peak, 10, new Vec3(0, 0, 255));
+        }
+
+        cv.imwrite('2.png', result);
+
+
+        // src = np.float32([[207, 151], [517, 285], [17, 601], [343, 731]])
+        // dst = np.float32([[0, 0], [337, 0], [0, 488], [337, 488]])
+        const dst = [
+            new Point2(0, 0), 
+            new Point2(300, 0), 
+            new Point2(0, 300), 
+            new Point2(300, 300)
+        ];
+        const m = cv.getPerspectiveTransform(docCnt, dst);
+        result = result.warpPerspective(m, new Size(300, 300));
+
+        imwrite('result.png', result);
     }
     static resize(list, l) {
         let result = [];
