@@ -93,8 +93,8 @@ class Sudoku {
 
         cv.imwrite('3.png', result);
 
-        const edgeSize = smallGrid / 3;
-        const deteSmallGridSize = edgeSize * 2;
+        const edgeSize = smallGrid / 6;
+        const deteSmallGridSize = smallGrid - edgeSize * 2;
         (async () => {
             const worker = Tesseract.createWorker();
             await worker.load();
@@ -102,17 +102,19 @@ class Sudoku {
             await worker.initialize('eng');
             await worker.setParameters({
                 tessedit_char_whitelist: '0123456789',
+                tessedit_pageseg_mode: Tesseract.PSM.SINGLE_CHAR
             });
             let list = [];
             for (let i = 0; i < this.length; i++) {
                 for (let j = 0; j < this.length; j++) {
                     const { data: { text } } = await worker.recognize('3.png', {
-                        rectangle: { top: edgeSize + deteSmallGridSize * i, left: edgeSize + deteSmallGridSize * j, width: deteSmallGridSize, height: deteSmallGridSize },
+                        rectangle: { top: edgeSize + smallGrid * i, left: edgeSize + smallGrid * j, width: deteSmallGridSize, height: deteSmallGridSize },
                     });
-                    list.push(text == '' ? '.' : text);
+                    list.push(text == '' ? '.' : text.trim());
                 }
             }
             console.log(list);
+            console.table(Sudoku.resize(list, 9));
             await worker.terminate();
         })();
 
