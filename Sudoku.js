@@ -44,9 +44,9 @@ class Sudoku {
         return this._ans;
     }
     ansFromImg(imagePath) {
-        let result = cv.imread(imagePath);
         let image = cv.imread(imagePath);
         image = image.cvtColor(cv.COLOR_BGR2GRAY);
+        let result = image.copy();
         image = image.gaussianBlur(new cv.Size(5, 5), 0)
         image = image.dilate(cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3, 3)));
         image = image.canny(30, 120, 3);
@@ -89,11 +89,18 @@ class Sudoku {
         const bigGrid = size / this.size;
         const smallGrid = size / this.length;
 
-        // result.drawCircle(new cv.Point2(0, smallGrid * 8), 3, new cv.Vec3(0, 0, 255))
-
         cv.imwrite('3.png', result);
 
-        const edgeSize = smallGrid / 6;
+        let img_Blur = result.medianBlur(3);
+        img_Blur = img_Blur.gaussianBlur(new cv.Size(3, 3), 0);
+
+        const kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(11, 11));
+        const close = img_Blur.morphologyEx(kernel, cv.MORPH_CLOSE);
+        const div = img_Blur.hDiv(close);
+        const img_brightness_adjust = div.normalize(0, 255, cv.NORM_MINMAX);
+        cv.imwrite('4.png', img_brightness_adjust);
+
+        const edgeSize = smallGrid / 8;
         const deteSmallGridSize = smallGrid - edgeSize * 2;
         (async () => {
             const worker = Tesseract.createWorker();
@@ -117,7 +124,6 @@ class Sudoku {
             console.table(Sudoku.resize(list, 9));
             await worker.terminate();
         })();
-
     }
     static resize(list, l) {
         let result = [];
