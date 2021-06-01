@@ -76,7 +76,7 @@ class Sudoku {
         // result.drawLine(docCnt[3], docCnt[0], new Vec3(0, 255, 0));
         // cv.imwrite('2.png', result);
 
-        const size = 300;
+        const size = 450;
         const dst = [
             new cv.Point2(size, 0), 
             new cv.Point2(0, 0), 
@@ -97,33 +97,40 @@ class Sudoku {
         const kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(11, 11));
         const close = img_Blur.morphologyEx(kernel, cv.MORPH_CLOSE);
         const div = img_Blur.hDiv(close);
-        const img_brightness_adjust = div.normalize(0, 255, cv.NORM_MINMAX);
+        let img_brightness_adjust = div.normalize(0, 255, cv.NORM_MINMAX);
         cv.imwrite('4.png', img_brightness_adjust);
+
+        // 角
+        let corners = img_brightness_adjust.goodFeaturesToTrack(35, 0.05, 10);
+        for (const point2 of corners) {
+            img_brightness_adjust.drawCircle(point2, 5, new cv.Vec3(0, 0, 255));
+        }
+        cv.imwrite('5.png', img_brightness_adjust)
 
         const edgeSize = smallGrid / 8;
         const deteSmallGridSize = smallGrid - edgeSize * 2;
-        (async () => {
-            const worker = Tesseract.createWorker();
-            await worker.load();
-            await worker.loadLanguage('eng');
-            await worker.initialize('eng');
-            await worker.setParameters({
-                tessedit_char_whitelist: '0123456789',
-                tessedit_pageseg_mode: Tesseract.PSM.SINGLE_CHAR
-            });
-            let list = [];
-            for (let i = 0; i < this.length; i++) {
-                for (let j = 0; j < this.length; j++) {
-                    const { data: { text } } = await worker.recognize('3.png', {
-                        rectangle: { top: edgeSize + smallGrid * i, left: edgeSize + smallGrid * j, width: deteSmallGridSize, height: deteSmallGridSize },
-                    });
-                    list.push(text == '' ? '.' : text.trim());
-                }
-            }
-            console.log(list);
-            console.table(Sudoku.resize(list, 9));
-            await worker.terminate();
-        })();
+        // (async () => {
+        //     const worker = Tesseract.createWorker();
+        //     await worker.load();
+        //     await worker.loadLanguage('eng');
+        //     await worker.initialize('eng');
+        //     await worker.setParameters({
+        //         tessedit_char_whitelist: '0123456789',
+        //         tessedit_pageseg_mode: Tesseract.PSM.SINGLE_CHAR
+        //     });
+        //     let list = [];
+        //     for (let i = 0; i < this.length; i++) {
+        //         for (let j = 0; j < this.length; j++) {
+        //             const { data: { text } } = await worker.recognize('3.png', {
+        //                 rectangle: { top: edgeSize + smallGrid * i, left: edgeSize + smallGrid * j, width: deteSmallGridSize, height: deteSmallGridSize },
+        //             });
+        //             list.push(text == '' ? '.' : text.trim());
+        //         }
+        //     }
+        //     console.log(list);
+        //     console.table(Sudoku.resize(list, 9));
+        //     await worker.terminate();
+        // })();
     }
     static resize(list, l) {
         let result = [];
