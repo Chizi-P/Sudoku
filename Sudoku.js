@@ -109,21 +109,40 @@ class Sudoku {
         // test 找數字
         let testImg = result.copy();
         const testImgCnt = testImg.findContours(cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
-        console.log(testImgCnt);
         // testImg.drawContours(testImgCnt, new cv.Vec3(0, 0, 255));
-        for (const i in testImgCnt) {
-            const { x, y, width, height } = testImgCnt[i].boundingRect();
-            const area = testImgCnt[i].area;
-            // console.log(i, area, smallGridArea, smallGridArea / 18);
+
+        // 先全部contour做boundingRect並儲存
+        let testImgRect = testImgCnt.map(e => {
+            return e.boundingRect();
+        });
+
+        // 從點集合中計算矩形
+        for (const i in testImgRect) {
+            const { x, y, width, height } = testImgRect[i];
+            const area = width * height;
             if (area <= smallGridArea && area >= smallGridArea / 18) {
                 testImg.drawRectangle(
                     new cv.Point2(x, y),
                     new cv.Point2(x + width, y + height)
                 );
             } else {
-                delete testImgCnt[i];
+                delete testImgRect[i];
             }
         }
+
+        // for (const i in testImgCnt) {
+        //     const { x, y, width, height } = testImgCnt[i].boundingRect();
+        //     const area = testImgCnt[i].area;
+        //     // console.log(i, area, smallGridArea, smallGridArea / 18);
+        //     if (area <= smallGridArea && area >= smallGridArea / 18) {
+        //         testImg.drawRectangle(
+        //             new cv.Point2(x, y),
+        //             new cv.Point2(x + width, y + height)
+        //         );
+        //     } else {
+        //         delete testImgCnt[i];
+        //     }
+        // }
 
         /*
         for (let i = 0; i < this.length; i++) {
