@@ -128,22 +128,26 @@ class Sudoku {
                     new cv.Point2(x + width, y + height)
                 );
                 
+                // 計算每一格與矩形的重疊面積
                 let areas = [];
+                let j = 0;
                 for (let y = 0; y < size; y += smallGrid) {
                     for (let x = 0; x < size; x += smallGrid) {
                         const { width, height } = rect.and(new cv.Rect(x, y, smallGrid, smallGrid));
-                        areas.push({ 
-                            rect : rect, 
-                            area : width * height
-                        });
+                        if (width * height) {
+                            areas.push({ 
+                                i : j, 
+                                rect : rect, 
+                                area : width * height
+                            });
+                        }
+                        j++;
                     }
                 }
                 areas.sort((a, b) => {
                     return a.area + b.area;
                 });
-                if (areas[0].area) {
-                    rectInGrid.push(areas[0].rect);
-                }
+                rectInGrid.push(areas[0]);
                 // rectInGrid.push(areas[0].area ? areas[0].rect : '.');
 
             } else {
@@ -152,7 +156,6 @@ class Sudoku {
             }
         }
         console.log('g', rectInGrid)
-        console.log(testImg.cols)
         // testImg.crop(rectInGrid[0]);
         
         /**
@@ -179,6 +182,8 @@ class Sudoku {
             return mat.warpPerspective(m, resize);
         }
 
+        let cropNumImg = crop(testImg, rectInGrid[3]);
+        cv.imwrite('cropNumImg.png', cropNumImg);
 
         // 計算矩形和小格的重疊面積，確定矩形屬於哪個位置的方格
         
