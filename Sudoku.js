@@ -112,37 +112,48 @@ class Sudoku {
         // testImg.drawContours(testImgCnt, new cv.Vec3(0, 0, 255));
 
         // 先全部contour做boundingRect並儲存
-        let testImgRect = testImgCnt.map(e => {
+        let testImgRects = testImgCnt.map(e => {
             return e.boundingRect();
         });
 
         // 從點集合中計算矩形
-        for (const i in testImgRect) {
-            const { x, y, width, height } = testImgRect[i];
+        let rectInGrid = [];
+        for (const i in testImgRects) {
+            const rect = testImgRects[i];
+            const { x, y, width, height } = rect;
             const area = width * height;
             if (area <= smallGridArea && area >= smallGridArea / 18) {
                 testImg.drawRectangle(
                     new cv.Point2(x, y),
                     new cv.Point2(x + width, y + height)
                 );
+                
+                let areas = [];
+                for (let y = 0; y < size; y += smallGrid) {
+                    for (let x = 0; x < size; x += smallGrid) {
+                        const { width, height } = rect.and(new cv.Rect(x, y, smallGrid, smallGrid));
+                        areas.push({ 
+                            rect : rect, 
+                            area : width * height
+                        });
+                    }
+                }
+                areas.sort((a, b) => {
+                    return a.area + b.area;
+                });
+                rectInGrid.push(areas[0].area ? areas[0].rect : '.');
+
             } else {
-                delete testImgRect[i];
+                // 刪除太大太小的矩形
+                delete testImgRects[i];
             }
         }
+        console.log('g', rectInGrid)
 
-        // for (const i in testImgCnt) {
-        //     const { x, y, width, height } = testImgCnt[i].boundingRect();
-        //     const area = testImgCnt[i].area;
-        //     // console.log(i, area, smallGridArea, smallGridArea / 18);
-        //     if (area <= smallGridArea && area >= smallGridArea / 18) {
-        //         testImg.drawRectangle(
-        //             new cv.Point2(x, y),
-        //             new cv.Point2(x + width, y + height)
-        //         );
-        //     } else {
-        //         delete testImgCnt[i];
-        //     }
-        // }
+        // 計算矩形和小格的重疊面積，確定矩形屬於哪個位置的方格
+        
+
+
 
         /*
         for (let i = 0; i < this.length; i++) {
