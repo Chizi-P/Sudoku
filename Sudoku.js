@@ -141,7 +141,10 @@ class Sudoku {
                 areas.sort((a, b) => {
                     return a.area + b.area;
                 });
-                rectInGrid.push(areas[0].area ? areas[0].rect : '.');
+                if (areas[0].area) {
+                    rectInGrid.push(areas[0].rect);
+                }
+                // rectInGrid.push(areas[0].area ? areas[0].rect : '.');
 
             } else {
                 // 刪除太大太小的矩形
@@ -149,6 +152,33 @@ class Sudoku {
             }
         }
         console.log('g', rectInGrid)
+        console.log(testImg.cols)
+        // testImg.crop(rectInGrid[0]);
+        
+        /**
+         * @param {cv.Mat} mat
+         * @param {cv.Rect} rect
+         * @param {cv.Size} resize
+         */
+        function crop(mat, rect, resize) {
+            const { x, y, width, height} = rect;
+            const cropCnt = [
+                new cv.Point2(x, y),
+                new cv.Point2(x + width, y),
+                new cv.Point2(x, y + height),
+                new cv.Point2(x + width, y + height)
+            ];
+            // const dst = [
+            //     new cv.Point2(rect.x, rect.y), 
+            //     new cv.Point2(rect., -edge), 
+            //     new cv.Point2(-edge, size + edge), 
+            //     new cv.Point2(size + edge, size + edge)
+            // ];
+            const m = cv.getPerspectiveTransform(cropCnt, cropCnt);
+            resize = resize ?? new cv.Size(width, height);
+            return mat.warpPerspective(m, resize);
+        }
+
 
         // 計算矩形和小格的重疊面積，確定矩形屬於哪個位置的方格
         
