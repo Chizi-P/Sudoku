@@ -108,7 +108,7 @@ class Sudoku {
 
         // test 找數字
         let testImg = result.copy();
-        const testImgCnt = testImg.findContours(cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
+        const testImgCnt = testImg.findContours(cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
         // testImg.drawContours(testImgCnt, new cv.Vec3(0, 0, 255));
 
         // 先全部contour做boundingRect並儲存
@@ -122,7 +122,7 @@ class Sudoku {
             const rect = testImgRects[i];
             const { x, y, width, height } = rect;
             const area = width * height;
-            if (area <= smallGridArea && area >= smallGridArea / 18) {
+            if (area <= smallGridArea && area >= smallGridArea / 12) {
                 testImg.drawRectangle(
                     new cv.Point2(x, y),
                     new cv.Point2(x + width, y + height)
@@ -149,7 +149,7 @@ class Sudoku {
                 });
                 rectInGrid.push(areas[0]);
                 // rectInGrid.push(areas[0].area ? areas[0].rect : '.');
-
+                testImg.putText(i, new cv.Point2(areas[0].rect.x, areas[0].rect.y), 1, 1)
             } else {
                 // 刪除太大太小的矩形
                 delete testImgRects[i];
@@ -182,11 +182,8 @@ class Sudoku {
             return mat.warpPerspective(m, resize);
         }
 
-        let cropNumImg = crop(testImg, rectInGrid[3]);
+        let cropNumImg = crop(testImg, rectInGrid[0].rect);
         cv.imwrite('cropNumImg.png', cropNumImg);
-
-        // 計算矩形和小格的重疊面積，確定矩形屬於哪個位置的方格
-        
 
 
 
