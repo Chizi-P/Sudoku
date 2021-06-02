@@ -77,11 +77,12 @@ class Sudoku {
         // cv.imwrite('2.png', result);
 
         const size = 450;
+        const edge = 5;
         const dst = [
-            new cv.Point2(size, 0), 
-            new cv.Point2(0, 0), 
-            new cv.Point2(0, size), 
-            new cv.Point2(size, size)
+            new cv.Point2(size + edge, -edge), 
+            new cv.Point2(-edge, -edge), 
+            new cv.Point2(-edge, size + edge), 
+            new cv.Point2(size + edge, size + edge)
         ];
         const m = cv.getPerspectiveTransform(docCnt, dst);
         result = result.warpPerspective(m, new cv.Size(size, size));
@@ -97,18 +98,48 @@ class Sudoku {
         const kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(11, 11));
         const close = img_Blur.morphologyEx(kernel, cv.MORPH_CLOSE);
         const div = img_Blur.hDiv(close);
-        let img_brightness_adjust = div.normalize(0, 255, cv.NORM_MINMAX);
-        cv.imwrite('4.png', img_brightness_adjust);
-
-        // 角
-        let corners = img_brightness_adjust.goodFeaturesToTrack(35, 0.05, 10);
-        for (const point2 of corners) {
-            img_brightness_adjust.drawCircle(point2, 5, new cv.Vec3(0, 0, 255));
-        }
-        cv.imwrite('5.png', img_brightness_adjust)
+        result = div.normalize(0, 255, cv.NORM_MINMAX);
+        cv.imwrite('4.png', result);
 
         const edgeSize = smallGrid / 8;
         const deteSmallGridSize = smallGrid - edgeSize * 2;
+        const smallGridArea = smallGrid ** 2;
+
+
+        // test 找數字
+        let testImg = result.copy();
+        const testImgCnt = testImg.findContours(cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
+        console.log(testImgCnt);
+        // testImg.drawContours(testImgCnt, new cv.Vec3(0, 0, 255));
+        for (const i in testImgCnt) {
+            const { x, y, width, height } = testImgCnt[i].boundingRect();
+            const area = testImgCnt[i].area;
+            // console.log(i, area, smallGridArea, smallGridArea / 18);
+            if (area <= smallGridArea && area >= smallGridArea / 18) {
+                testImg.drawRectangle(
+                    new cv.Point2(x, y),
+                    new cv.Point2(x + width, y + height)
+                );
+            } else {
+                delete testImgCnt[i];
+            }
+        }
+
+        /*
+        for (let i = 0; i < this.length; i++) {
+            for (let j = 0; j < this.length; j++) {
+                testImg.drawRectangle(
+                    new cv.Point2(edgeSize + smallGrid * i, edgeSize + smallGrid * j), 
+                    new cv.Point2(edgeSize + smallGrid * i + deteSmallGridSize, edgeSize + smallGrid * j + deteSmallGridSize), 
+                    new cv.Vec3(0, 0, 255),
+                );
+            }
+        }
+        */
+        cv.imwrite('5.png', testImg);
+
+
+
         // (async () => {
         //     const worker = Tesseract.createWorker();
         //     await worker.load();
