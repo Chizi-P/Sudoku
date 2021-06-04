@@ -1,5 +1,6 @@
 const cv = require('opencv4nodejs');
 const Tesseract = require('tesseract.js')
+const fs = require('fs');
 
 class Sudoku {
     constructor({size = 3, chars = ['1', '2', '3', '4', '5', '6', '7', '8', '9'], unknowChar = '.'} = {}) {
@@ -122,6 +123,7 @@ class Sudoku {
             const rect = testImgRects[i];
             const { x, y, width, height } = rect;
             const area = width * height;
+            // 最小的面積是一個魔法數字
             if (area <= smallGridArea && area >= smallGridArea / 12) {
                 testImg.drawRectangle(
                     new cv.Point2(x, y),
@@ -130,100 +132,87 @@ class Sudoku {
                 
                 // 計算每一格與矩形的重疊面積
                 let areas = [];
-                let j = 0;
                 for (let y = 0; y < size; y += smallGrid) {
                     for (let x = 0; x < size; x += smallGrid) {
                         const { width, height } = rect.and(new cv.Rect(x, y, smallGrid, smallGrid));
-                        if (width * height) {
-                            areas.push({ 
-                                i : j, 
-                                rect : rect, 
-                                area : width * height
-                            });
-                        }
-                        j++;
+                        areas.push(width * height);
                     }
                 }
-                areas.sort((a, b) => {
-                    return a.area + b.area;
-                });
-                rectInGrid.push(areas[0]);
-                // rectInGrid.push(areas[0].area ? areas[0].rect : '.');
-                testImg.putText(i, new cv.Point2(areas[0].rect.x, areas[0].rect.y), 1, 1)
+                const indexOfMaxArea = areas.indexOf(Math.max(...areas));
+                rectInGrid[indexOfMaxArea] = rect;
             } else {
-                // 刪除太大太小的矩形
+                // 刪除太大太小的矩形(沒必要)
                 delete testImgRects[i];
             }
         }
         console.log('g', rectInGrid)
         // testImg.crop(rectInGrid[0]);
         
-        /**
-         * @param {cv.Mat} mat
-         * @param {cv.Rect} rect
-         * @param {cv.Size} resize
-         */
-        function crop(mat, rect, resize) {
-            const { x, y, width, height} = rect;
-            const cropCnt = [
-                new cv.Point2(x, y),
-                new cv.Point2(x + width, y),
-                new cv.Point2(x, y + height),
-                new cv.Point2(x + width, y + height)
-            ];
-            // const dst = [
-            //     new cv.Point2(rect.x, rect.y), 
-            //     new cv.Point2(rect., -edge), 
-            //     new cv.Point2(-edge, size + edge), 
-            //     new cv.Point2(size + edge, size + edge)
-            // ];
-            const m = cv.getPerspectiveTransform(cropCnt, cropCnt);
-            resize = resize ?? new cv.Size(width, height);
-            return mat.warpPerspective(m, resize);
-        }
+        // 標記數字所在的格子位置
+        rectInGrid.forEach((e, i) => {
+            testImg.putText(`${i + 1}`, new cv.Point2(e.x, e.y), 1, 1);
+        });
 
-        let cropNumImg = crop(testImg, rectInGrid[0].rect);
-        cv.imwrite('cropNumImg.png', cropNumImg);
-
-
-
-        /*
-        for (let i = 0; i < this.length; i++) {
-            for (let j = 0; j < this.length; j++) {
-                testImg.drawRectangle(
-                    new cv.Point2(edgeSize + smallGrid * i, edgeSize + smallGrid * j), 
-                    new cv.Point2(edgeSize + smallGrid * i + deteSmallGridSize, edgeSize + smallGrid * j + deteSmallGridSize), 
-                    new cv.Vec3(0, 0, 255),
-                );
+        const folderName = 'cropNumImg';
+        try {
+            const files = fs.readdirSync(folderName);
+            for (const file of files) {
+                fs.unlink(`${folderName}/${file}`, err => {
+                    if (err) throw err;
+                });
+            }
+        } catch(e) {
+            if (e.code == 'ENOENT') {
+                fs.mkdirSync(folderName);
             }
         }
-        */
+        // 把roi數字寫入到文件
+        rectInGrid.forEach((e, i) => {
+            cv.imwrite(`${__dirname}/${folderName}/${i}.png`, result.getRegion(e));
+        });
+
+        // 畫每個格子的矩形
+        // for (let i = 0; i < this.length; i++) {
+        //     for (let j = 0; j < this.length; j++) {
+        //         testImg.drawRectangle(
+        //             new cv.Point2(edgeSize + smallGrid * i, edgeSize + smallGrid * j), 
+        //             new cv.Point2(edgeSize + smallGrid * i + deteSmallGridSize, edgeSize + smallGrid * j + deteSmallGridSize), 
+        //             new cv.Vec3(0, 0, 255),
+        //         );
+        //     }
+        // }
+
         cv.imwrite('5.png', testImg);
 
+        (async () => {
+            const worker = Tesseract.createWorker();
+            await worker.load();
+            await worker.loadLanguage('eng');
+            await worker.initialize('eng');
+            await worker.setParameters({
+                tessedit_char_whitelist: '0123456789',
+                tessedit_pageseg_mode: Tesseract.PSM.SINGLE_CHAR
+            });
+            let list = [];
+            rectInGrid.forEach((e, i) => {
+                const { data: { text }} = await worker.recognize(`4.png`, {
+                    rectangle: { top: e.y, left: e.x, width: e.width, height: e.height }
+                });
+                list[i] = text.trim();
+            });
 
-
-        // (async () => {
-        //     const worker = Tesseract.createWorker();
-        //     await worker.load();
-        //     await worker.loadLanguage('eng');
-        //     await worker.initialize('eng');
-        //     await worker.setParameters({
-        //         tessedit_char_whitelist: '0123456789',
-        //         tessedit_pageseg_mode: Tesseract.PSM.SINGLE_CHAR
-        //     });
-        //     let list = [];
-        //     for (let i = 0; i < this.length; i++) {
-        //         for (let j = 0; j < this.length; j++) {
-        //             const { data: { text } } = await worker.recognize('3.png', {
-        //                 rectangle: { top: edgeSize + smallGrid * i, left: edgeSize + smallGrid * j, width: deteSmallGridSize, height: deteSmallGridSize },
-        //             });
-        //             list.push(text == '' ? '.' : text.trim());
-        //         }
-        //     }
-        //     console.log(list);
-        //     console.table(Sudoku.resize(list, 9));
-        //     await worker.terminate();
-        // })();
+            // for (let i = 0; i < this.length; i++) {
+            //     for (let j = 0; j < this.length; j++) {
+            //         const { data: { text } } = await worker.recognize('.png', {
+            //             rectangle: { top: edgeSize + smallGrid * i, left: edgeSize + smallGrid * j, width: deteSmallGridSize, height: deteSmallGridSize },
+            //         });
+            //         list.push(text == '' ? '.' : text.trim());
+            //     }
+            // }
+            console.log(list);
+            console.table(Sudoku.resize(list, 9));
+            await worker.terminate();
+        })();
     }
     static resize(list, l) {
         let result = [];
