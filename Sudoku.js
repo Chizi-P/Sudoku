@@ -68,17 +68,18 @@ class Sudoku {
             }
         }
 
-        // for (let peak of docCnt) {
-        //     result.drawCircle(peak, 5, new Vec3(0, 0, 255));
-        // }
-        // result.drawLine(docCnt[0], docCnt[1], new Vec3(0, 255, 0));
-        // result.drawLine(docCnt[1], docCnt[2], new Vec3(0, 255, 0));
-        // result.drawLine(docCnt[2], docCnt[3], new Vec3(0, 255, 0));
-        // result.drawLine(docCnt[3], docCnt[0], new Vec3(0, 255, 0));
-        // cv.imwrite('2.png', result);
+        let image2 = result.copy();
+        for (let peak of docCnt) {
+            image2.drawCircle(peak, 5, new Vec3(0, 0, 255));
+        }
+        image2.drawLine(docCnt[0], docCnt[1], new Vec3(0, 255, 0));
+        image2.drawLine(docCnt[1], docCnt[2], new Vec3(0, 255, 0));
+        image2.drawLine(docCnt[2], docCnt[3], new Vec3(0, 255, 0));
+        image2.drawLine(docCnt[3], docCnt[0], new Vec3(0, 255, 0));
+        cv.imwrite('2.png', image2);
 
         const size = 450;
-        const edge = 5;
+        const edge = 0;
         const dst = [
             new cv.Point2(size + edge, -edge), 
             new cv.Point2(-edge, -edge), 
@@ -100,6 +101,7 @@ class Sudoku {
         const close = img_Blur.morphologyEx(kernel, cv.MORPH_CLOSE);
         const div = img_Blur.hDiv(close);
         result = div.normalize(0, 255, cv.NORM_MINMAX);
+
         cv.imwrite('4.png', result);
 
         const edgeSize = smallGrid / 8;
@@ -118,7 +120,7 @@ class Sudoku {
         });
 
         // 從點集合中計算矩形
-        let rectInGrid = [];
+        let rectInGrid = new Array(this.length ** 2);
         for (const i in testImgRects) {
             const rect = testImgRects[i];
             const { x, y, width, height } = rect;
@@ -140,12 +142,8 @@ class Sudoku {
                 }
                 const indexOfMaxArea = areas.indexOf(Math.max(...areas));
                 rectInGrid[indexOfMaxArea] = rect;
-            } else {
-                // 刪除太大太小的矩形(沒必要)
-                delete testImgRects[i];
             }
         }
-        console.log('g', rectInGrid)
         // testImg.crop(rectInGrid[0]);
         
         // 標記數字所在的格子位置
@@ -153,6 +151,7 @@ class Sudoku {
             testImg.putText(`${i + 1}`, new cv.Point2(e.x, e.y), 1, 1);
         });
 
+        // 把roi數字寫入到文件
         const folderName = 'cropNumImg';
         try {
             const files = fs.readdirSync(folderName);
@@ -165,10 +164,10 @@ class Sudoku {
             if (e.code == 'ENOENT') {
                 fs.mkdirSync(folderName);
             }
+            throw e;
         }
-        // 把roi數字寫入到文件
         rectInGrid.forEach((e, i) => {
-            cv.imwrite(`${__dirname}/${folderName}/${i}.png`, result.getRegion(e));
+            cv.imwrite(`${__dirname}/${folderName}/${i + 1}.png`, result.getRegion(e));
         });
 
         // 畫每個格子的矩形
@@ -184,35 +183,28 @@ class Sudoku {
 
         cv.imwrite('5.png', testImg);
 
+        let list = new Array(this.length ** 2).fill(this.unknowChar);
         (async () => {
             const worker = Tesseract.createWorker();
             await worker.load();
             await worker.loadLanguage('eng');
             await worker.initialize('eng');
             await worker.setParameters({
-                tessedit_char_whitelist: '0123456789',
+                tessedit_char_whitelist: '123456789',
                 tessedit_pageseg_mode: Tesseract.PSM.SINGLE_CHAR
             });
-            let list = [];
-            rectInGrid.forEach((e, i) => {
-                const { data: { text }} = await worker.recognize(`4.png`, {
-                    rectangle: { top: e.y, left: e.x, width: e.width, height: e.height }
+            for (const i in rectInGrid) {
+                const { x, y, width ,height } = rectInGrid[i];
+                const { data: { text } } = await worker.recognize(`4.png`, {
+                    rectangle: { top: y, left: x, width: width, height: height }
                 });
                 list[i] = text.trim();
-            });
-
-            // for (let i = 0; i < this.length; i++) {
-            //     for (let j = 0; j < this.length; j++) {
-            //         const { data: { text } } = await worker.recognize('.png', {
-            //             rectangle: { top: edgeSize + smallGrid * i, left: edgeSize + smallGrid * j, width: deteSmallGridSize, height: deteSmallGridSize },
-            //         });
-            //         list.push(text == '' ? '.' : text.trim());
-            //     }
-            // }
-            console.log(list);
-            console.table(Sudoku.resize(list, 9));
+            }
             await worker.terminate();
         })();
+
+        console.table(Sudoku.resize(list, 9));
+        return this.ans(list);
     }
     static resize(list, l) {
         let result = [];
