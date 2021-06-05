@@ -79,6 +79,7 @@ class Sudoku {
         image2.drawLine(docCnt[3], docCnt[0], new cv.Vec3(0, 255, 0));
         cv.imwrite('2.png', image2);
 
+
         const size = 450;
         const edge = 0;
         const dst = [
@@ -87,8 +88,12 @@ class Sudoku {
             new cv.Point2(-edge, size + edge), 
             new cv.Point2(size + edge, size + edge)
         ];
+
         const m = cv.getPerspectiveTransform(docCnt, dst);
         result = result.warpPerspective(m, new cv.Size(size, size));
+
+        // 不知道為什麼改圖片後會被轉了90度，所以轉回來
+        // result = result.rotate(cv.ROTATE_90_COUNTERCLOCKWISE);
 
         const bigGrid = size / this.size;
         const smallGrid = size / this.length;
@@ -126,7 +131,7 @@ class Sudoku {
             const { x, y, width, height } = rect;
             const area = width * height;
             // 最小的面積是一個魔法數字
-            if (area <= smallGridArea && area >= smallGridArea / 12) {
+            if (area <= smallGridArea && area >= smallGridArea / 12 && width < smallGrid && height < smallGrid) {
                 testImg.drawRectangle(
                     new cv.Point2(x, y),
                     new cv.Point2(x + width, y + height)
@@ -136,7 +141,7 @@ class Sudoku {
                 let areas = [];
                 for (let y = 0; y < size; y += smallGrid) {
                     for (let x = 0; x < size; x += smallGrid) {
-                        const { width, height } = rect.and(new cv.Rect(x, y, smallGrid, smallGrid));
+                        const { width, height } = rect.and(new cv.Rect(x + edgeSize, y + edgeSize, smallGrid - 2 * edgeSize, smallGrid - 2 * edgeSize));
                         areas.push(width * height);
                     }
                 }
@@ -198,6 +203,7 @@ class Sudoku {
                     rectangle: { top: y, left: x, width: width, height: height }
                 });
                 list[i] = text.trim();
+                list[i] = list[i] === '' ? this.unknowChar : list[i];
             }
             await worker.terminate();
             return list;
