@@ -1,6 +1,7 @@
 const cv = require('opencv4nodejs');
 const Tesseract = require('tesseract.js')
 const fs = require('fs');
+const { callbackify } = require('util');
 
 class Sudoku {
     constructor({size = 3, chars = ['1', '2', '3', '4', '5', '6', '7', '8', '9'], unknowChar = '.'} = {}) {
@@ -70,12 +71,12 @@ class Sudoku {
 
         let image2 = result.copy();
         for (let peak of docCnt) {
-            image2.drawCircle(peak, 5, new Vec3(0, 0, 255));
+            image2.drawCircle(peak, 5, new cv.Vec3(0, 0, 255));
         }
-        image2.drawLine(docCnt[0], docCnt[1], new Vec3(0, 255, 0));
-        image2.drawLine(docCnt[1], docCnt[2], new Vec3(0, 255, 0));
-        image2.drawLine(docCnt[2], docCnt[3], new Vec3(0, 255, 0));
-        image2.drawLine(docCnt[3], docCnt[0], new Vec3(0, 255, 0));
+        image2.drawLine(docCnt[0], docCnt[1], new cv.Vec3(0, 255, 0));
+        image2.drawLine(docCnt[1], docCnt[2], new cv.Vec3(0, 255, 0));
+        image2.drawLine(docCnt[2], docCnt[3], new cv.Vec3(0, 255, 0));
+        image2.drawLine(docCnt[3], docCnt[0], new cv.Vec3(0, 255, 0));
         cv.imwrite('2.png', image2);
 
         const size = 450;
@@ -183,7 +184,6 @@ class Sudoku {
 
         cv.imwrite('5.png', testImg);
 
-        let list = new Array(this.length ** 2).fill(this.unknowChar);
         (async () => {
             const worker = Tesseract.createWorker();
             await worker.load();
@@ -193,6 +193,7 @@ class Sudoku {
                 tessedit_char_whitelist: '123456789',
                 tessedit_pageseg_mode: Tesseract.PSM.SINGLE_CHAR
             });
+            let list = new Array(this.length ** 2).fill(this.unknowChar);
             for (const i in rectInGrid) {
                 const { x, y, width ,height } = rectInGrid[i];
                 const { data: { text } } = await worker.recognize(`4.png`, {
@@ -201,15 +202,19 @@ class Sudoku {
                 list[i] = text.trim();
             }
             await worker.terminate();
-        })();
-
-        console.table(Sudoku.resize(list, 9));
-        return this.ans(list);
+            return list;
+        })().then(list => {
+            console.log('Question:');
+            console.table(Sudoku.resize(list, 9));
+            this.ans(list);
+            this.show();
+        });
     }
     static resize(list, l) {
         let result = [];
-        for (let i = 0; i < list.length; i++) {
-            result.push(list.splice(0, l));
+        let copy = [...list];
+        for (let i = 0; i < copy.length; i++) {
+            result.push(copy.splice(0, l));
         }
         return result;
     }
@@ -235,11 +240,6 @@ var list = ["5","3","4",".","7",".",".",".",".",
             ".","6",".",".",".",".","2","8",".",
             ".",".",".","4","1","9",".",".","5",
             ".",".",".",".","8",".",".","7","9"];
-
-// let s = new Sudoku();
-// let result = s.ans(list);
-// console.log(result);
-// s.show();
 
 let s = new Sudoku();
 s.ansFromImg('image.png');
