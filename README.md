@@ -1,6 +1,6 @@
 # Sudoku
 
-```
+``` Javascript
 let sudoku = new Sudoku();
 sudoku.ansFromImg('image.png');
 ```
@@ -18,7 +18,7 @@ sudoku.ansFromImg('image.png');
 ![image](https://raw.githubusercontent.com/Chizi-P/Sudoku/main/5.png)
 
 #### 輸出:
-```
+``` 
 Question:
 ┌─────────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┐
 │ (index) │  0  │  1  │  2  │  3  │  4  │  5  │  6  │  7  │  8  │
