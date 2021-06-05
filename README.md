@@ -5,6 +5,19 @@ let sudoku = new Sudoku();
 sudoku.ansFromImg('image.png');
 ```
 
+#### image.png:
+
+![image](https://raw.githubusercontent.com/Chizi-P/Sudoku/main/image.png)
+
+#### 矯正:
+
+![image](https://raw.githubusercontent.com/Chizi-P/Sudoku/main/3.png)
+
+#### 提取對應位置數字:
+
+![image](https://raw.githubusercontent.com/Chizi-P/Sudoku/main/5.png)
+
+#### 輸出:
 ```
 Question:
 ┌─────────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┐
