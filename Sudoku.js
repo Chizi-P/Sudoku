@@ -1,7 +1,6 @@
 const cv = require('opencv4nodejs');
 const Tesseract = require('tesseract.js')
 const fs = require('fs');
-const { callbackify } = require('util');
 
 class Sudoku {
     constructor({size = 3, chars = ['1', '2', '3', '4', '5', '6', '7', '8', '9'], unknowChar = '.'} = {}) {
