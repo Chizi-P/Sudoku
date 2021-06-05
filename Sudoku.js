@@ -113,7 +113,6 @@ class Sudoku {
         // test 找數字
         let testImg = result.copy();
         const testImgCnt = testImg.findContours(cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
-        // testImg.drawContours(testImgCnt, new cv.Vec3(0, 0, 255));
 
         // 先全部contour做boundingRect並儲存
         let testImgRects = testImgCnt.map(e => {
@@ -145,7 +144,6 @@ class Sudoku {
                 rectInGrid[indexOfMaxArea] = rect;
             }
         }
-        // testImg.crop(rectInGrid[0]);
         
         // 標記數字所在的格子位置
         rectInGrid.forEach((e, i) => {
