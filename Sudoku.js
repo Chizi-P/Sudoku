@@ -140,7 +140,12 @@ class Sudoku {
                 let areas = [];
                 for (let y = 0; y < size; y += smallGrid) {
                     for (let x = 0; x < size; x += smallGrid) {
-                        const { width, height } = rect.and(new cv.Rect(x + edgeSize, y + edgeSize, smallGrid - 2 * edgeSize, smallGrid - 2 * edgeSize));
+                        const { width, height } = rect.and(new cv.Rect(
+                            x + edgeSize, 
+                            y + edgeSize, 
+                            smallGrid - 2 * edgeSize, 
+                            smallGrid - 2 * edgeSize
+                        ));
                         areas.push(width * height);
                     }
                 }
