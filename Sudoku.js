@@ -245,5 +245,5 @@ var list = ["5","3","4",".","7",".",".",".",".",
             ".",".",".","4","1","9",".",".","5",
             ".",".",".",".","8",".",".","7","9"];
 
-let s = new Sudoku();
-s.ansFromImg('image.pngrm');
+let sudoku = new Sudoku();
+sudoku.ansFromImg('image.png');
