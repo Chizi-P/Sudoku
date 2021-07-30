@@ -90,10 +90,8 @@ class Sudoku {
 
         const m = cv.getPerspectiveTransform(docCnt, dst);
         result = result.warpPerspective(m, new cv.Size(size, size));
-
-        // 不知道為什麼改圖片後會被轉了90度，所以轉回來
-        // result = result.rotate(cv.ROTATE_90_COUNTERCLOCKWISE);
-
+        
+        
         const bigGrid = size / this.size;
         const smallGrid = size / this.length;
 
